@@ -1,0 +1,9 @@
+build/
+tests/runtime/
+tests/*.html
+tests/banana-tab.json
+tests/banana-runtime.js
+*.apk
+*.jks
+*.keystore
+__pycache__/
