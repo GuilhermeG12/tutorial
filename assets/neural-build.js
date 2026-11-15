@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const bridge=window.Android;
-  const state={mode:'idle',id:'',name:'',link:'',video:'',language:'pt',youtubeSource:'captions',activeSource:'audio',captionInfo:null,chords:[],words:[],cp:0,wp:0,upload:0,duration:0,result:null,error:'',serial:0,quality:prefs.speechQuality||'precise'};
+  const state={mode:'idle',id:'',name:'',link:'',video:'',language:'pt',youtubeSource:'captions',activeSource:'audio',captionInfo:null,chords:[],words:[],cp:0,wp:0,upload:0,duration:0,result:null,error:'',serial:0,outputMode:prefs.buildOutput==='chords'?'chords':'lyrics',quality:prefs.speechQuality||'precise'};
   const originalPlayer=window.onPlayer;
   let stageTimer=null;
   function watchStage(ms,message){clearTimeout(stageTimer);stageTimer=setTimeout(()=>{if(state.mode!=='idle'&&state.mode!=='ready'&&state.mode!=='error')fail(message);},ms);}
@@ -15,29 +15,30 @@
     if(state.mode==='idle'||state.mode==='error'){
       app.innerHTML=`<header class="top"><h1>Montar cifra</h1></header><main>
         ${state.error?`<div class="card"><h3>Não foi possível terminar</h3><p class="hint">${esc(state.error)}</p></div>`:''}
-        <div class="card"><h3>Do áudio para a cifra</h3><p class="hint">Acordes e palavras são reconhecidos no próprio áudio. A cifra inclui a introdução, os intervalos instrumentais e o final.</p>
+        <div class="card"><label class="hint" for="noutput">Como montar a cifra</label><select class="in" id="noutput" onchange="setBuildOutput(this.value)"><option value="lyrics">Com transcrição · acordes e letra</option><option value="chords">Sem transcrição · somente acordes</option></select><p class="hint" id="output-hint"></p></div>
+        <div class="card"><h3>Do áudio para a cifra</h3><p class="hint">Analise a música inteira com letra ou somente com os acordes reconhecidos, do início ao final.</p>
         <input class="in" id="nname" placeholder="Nome da música" value="${esc(state.name)}">
-        <label class="hint" for="nlang" style="display:block;margin-top:12px">Idioma da letra</label><select class="in" style="margin-top:8px" id="nlang">${languages()}</select>
-        <label class="hint" for="nquality" style="display:block;margin-top:12px">Transcrição</label><select class="in" id="nquality"><option value="precise">Mais precisa · por trechos de voz</option><option value="balanced">Equilibrada · método anterior</option></select><p class="hint">O modo mais preciso revisita finais de voz sem transcrição e pode demorar mais. Para músicas em português, mantenha Português.</p>
+        <div id="speech-settings"><label class="hint" for="nlang" style="display:block;margin-top:12px">Idioma da letra</label><select class="in" style="margin-top:8px" id="nlang">${languages()}</select>
+        <label class="hint" for="nquality" style="display:block;margin-top:12px">Transcrição</label><select class="in" id="nquality"><option value="precise">Mais precisa · por trechos de voz</option><option value="balanced">Equilibrada · método anterior</option></select><p class="hint">O modo mais preciso revisita finais de voz sem transcrição e pode demorar mais. Para músicas em português, mantenha Português.</p></div>
         <label class="btn" style="display:block;text-align:center;margin-top:12px">Escolher áudio ou vídeo<input type="file" accept="audio/*,video/*" style="display:none" onchange="startBuildFile(this.files[0])"></label></div>
         <div class="card"><h3>Pelo link do YouTube</h3><input class="in" id="blink" placeholder="https://youtube.com/watch?v=…" value="${esc(state.link)}">
-        <label class="hint" for="nsource" style="display:block;margin-top:12px">Como obter a letra</label>
+        <div id="youtube-lyrics"><label class="hint" for="nsource" style="display:block;margin-top:12px">Como obter a letra</label>
         <select class="in" id="nsource"><option value="captions">Legenda do YouTube (automática ou do canal)</option><option value="audio">Transcrição do áudio pelo app</option></select>
-        <p class="hint">Português é o padrão. O app busca a legenda nesse idioma e, se necessário, a tradução automática do YouTube para português ou para o idioma que você escolher.</p>
+        <p class="hint">Português é o padrão. O app busca a legenda nesse idioma e, se necessário, a tradução automática do YouTube para português ou para o idioma que você escolher.</p></div>
         <button class="btn ghost" style="width:100%;margin-top:10px" onclick="startBuildLink()">Montar cifra do vídeo</button></div>
         <button class="btn ghost" style="width:100%" onclick="startNeuralMic()">Ouvir pelo microfone</button>
         <p class="hint">Você poderá revisar a transcrição e os acordes antes de salvar.</p></main>${nav('montar')}`;
-      document.getElementById('nquality').value=state.quality;document.getElementById('nlang').value=state.language;document.getElementById('nsource').value=state.youtubeSource;return;
+      document.getElementById('noutput').value=state.outputMode;applyOutput();document.getElementById('nquality').value=state.quality;document.getElementById('nlang').value=state.language;document.getElementById('nsource').value=state.youtubeSource;return;
     }
     if(state.mode==='ready'){
       app.innerHTML=`<header class="top"><h1>Cifra montada</h1></header><main><div class="card"><h3>Análise concluída</h3>
-        <p class="hint">${esc(state.name)} · ${fmtT(state.duration)}<br>${state.chords.length} trechos de acordes · ${state.words.length} palavras reconhecidas</p>
-        <p class="hint">Letra: ${state.activeSource==='captions'?(state.captionInfo&&state.captionInfo.automatic?'legenda automática do YouTube':'legenda do canal no YouTube'):'transcrição do áudio pelo app'}.</p>
+        <p class="hint">${esc(state.name)} · ${fmtT(state.duration)}<br>${state.chords.length} trechos de acordes${state.activeSource==='chords'?' · sem transcrição':' · '+state.words.length+' palavras reconhecidas'}</p>
+        <p class="hint">Letra: ${state.activeSource==='chords'?'sem transcrição, somente acordes':state.activeSource==='captions'?(state.captionInfo&&state.captionInfo.automatic?'legenda automática do YouTube':'legenda do canal no YouTube'):'transcrição do áudio pelo app'}.</p>
         ${state.captionInfo?`<p class="hint">Idioma da legenda: ${esc(languageNames[languageBase(state.captionInfo.language)]||state.captionInfo.language)}.</p>`:''}
         ${state.captionInfo&&state.captionInfo.translated?`<p class="hint">Traduzida automaticamente pelo YouTube a partir de ${esc(languageNames[languageBase(state.captionInfo.sourceLanguage)]||state.captionInfo.sourceLanguage)}. A tradução pode manter erros da legenda original.</p>`:''}
         ${state.captionInfo&&state.captionInfo.timingApproximate?'<p class="hint">Esta legenda não informa todos os tempos por palavra; parte do alinhamento é aproximada.</p>':''}
-        ${!state.words.length?'<p class="hint">Nenhuma palavra foi reconhecida. O resultado contém os acordes instrumentais; confira se havia voz no áudio.</p>':''}
-        <button class="btn ghost" style="width:100%;margin-bottom:10px" onclick="openSpeechReview()">Revisar palavras reconhecidas</button><button class="btn" style="width:100%" onclick="viewNeuralScore()">Ver cifra montada</button>
+        ${state.activeSource!=='chords'&&!state.words.length?'<p class="hint">Nenhuma palavra foi reconhecida. O resultado contém os acordes instrumentais; confira se havia voz no áudio.</p>':''}
+        ${state.activeSource==='chords'?'<p class="hint">Intro, partes e final são divisões aproximadas por tempo. Os acordes seguem a análise do áudio inteiro.</p>':'<button class="btn ghost" style="width:100%;margin-bottom:10px" onclick="openSpeechReview()">Revisar palavras reconhecidas</button>'}<button class="btn" style="width:100%" onclick="viewNeuralScore()">Ver cifra montada</button>
         <button class="btn ghost" style="width:100%;margin-top:8px" onclick="cancelBuild()">Analisar outro áudio</button></div></main>${nav('montar')}`;return;
     }
     app.innerHTML=`<header class="top"><h1>Montar cifra</h1></header><main><div class="card">
@@ -52,19 +53,21 @@
   function update(){
     const msg=document.getElementById('nmessage'),stages=document.getElementById('nstages'),bar=document.getElementById('nbar');if(!msg)return;
     const messages={download:'Baixando o áudio do vídeo…',decode:'Abrindo e preparando o áudio…',upload:'Preparando a análise…',run:'Reconhecendo acordes e transcrevendo o áudio…',recording:'Ouvindo pelo microfone…'};
-    msg.textContent=state.activeSource==='captions'&&state.mode==='run'?'Reconhecendo os acordes e montando com a legenda…':messages[state.mode]||'Preparando…';
-    if(stages)stages.textContent=state.mode==='run'?`Acordes: ${Math.round(state.cp*100)}% · ${state.activeSource==='captions'?'Legenda':'Transcrição'}: ${Math.round(state.wp*100)}%`:'';
-    if(bar)bar.style.width=Math.round(state.mode==='run'?10+90*(state.cp+state.wp)/2:10*state.upload)+'%';
+    msg.textContent=state.activeSource==='chords'&&state.mode==='run'?'Reconhecendo somente os acordes da música…':state.activeSource==='captions'&&state.mode==='run'?'Reconhecendo os acordes e montando com a legenda…':messages[state.mode]||'Preparando…';
+    if(stages)stages.textContent=state.activeSource==='chords'&&state.mode==='run'?`Acordes: ${Math.round(state.cp*100)}%`:state.mode==='run'?`Acordes: ${Math.round(state.cp*100)}% · ${state.activeSource==='captions'?'Legenda':'Transcrição'}: ${Math.round(state.wp*100)}%`:'';
+    if(bar)bar.style.width=Math.round(state.mode==='run'?10+90*(state.activeSource==='chords'?state.cp:(state.cp+state.wp)/2):10*state.upload)+'%';
     const c=document.getElementById('nchords');if(c)c.innerHTML=NeuralScore.changesOnly(state.chords).slice(-30).map(x=>`<span class="bchip">${esc(NeuralScore.notation(x.chord))}</span>`).join(' ');
     const w=document.getElementById('nwords');if(w)w.textContent=state.words.slice(-90).map(x=>x.w).join(' ');
   }
   function fail(error){stopWatch();state.mode='error';state.error=String(error&&error.message||error);build.st='idle';try{bridge&&bridge.neuralCancel();bridge&&bridge.captureStop();}catch(e){}if(location.hash==='#/montar')panel();}
   function prepare(name,activeSource='audio'){
     stopWatch();readyBridge();try{bridge.neuralCancel();bridge.captureStop();bridge.playerStop();}catch(e){}const lang=document.getElementById('nlang');state.language=lang?lang.value:state.language;
+    const output=document.getElementById('noutput');if(output)state.outputMode=output.value==='chords'?'chords':'lyrics';
+    if(state.outputMode==='chords')activeSource='chords';
     if(activeSource==='captions'&&state.language==='auto')state.language='pt';
-    const quality=document.getElementById('nquality');state.quality=quality&&quality.value==='balanced'?'balanced':'precise';prefs.speechQuality=state.quality;savePrefs();try{if(bridge.setSpeechQuality)bridge.setSpeechQuality(state.quality);}catch(e){}
+    const quality=document.getElementById('nquality');state.quality=quality&&quality.value==='balanced'?'balanced':'precise';prefs.speechQuality=state.quality;savePrefs();try{if(bridge.setSpeechQuality)bridge.setSpeechQuality(activeSource==='chords'?'chords-only':state.quality);}catch(e){}
     state.name=name||state.name||'Áudio';state.id='n'+Date.now()+'_'+(++state.serial);
-    Object.assign(state,{activeSource,captionInfo:null,cp:0,wp:0,upload:0,chords:[],words:[],result:null,error:'',duration:0});
+    Object.assign(state,{activeSource,captionInfo:null,cp:0,wp:activeSource==='chords'?1:0,upload:0,chords:[],words:[],result:null,error:'',duration:0});
     build.token++;build.st='run';return state.id;
   }
   const pause=()=>new Promise(r=>setTimeout(r,0));
@@ -87,6 +90,12 @@
     for(let i=0;i<pcm.length;i+=40000){if(id!==state.id)return;check(bridge.neuralAppend(id,encodePcm(pcm.subarray(i,i+40000))));state.upload=Math.min(1,(i+40000)/pcm.length);update();await pause();}
     if(id!==state.id)return;state.mode='run';panel();watchStage(600000,'A análise demorou demais sem responder. Tente um trecho menor.');check(bridge.neuralFinish(id));
   }
+  function applyOutput(){
+    const only=state.outputMode==='chords';
+    for(const id of ['speech-settings','youtube-lyrics']){const el=document.getElementById(id);if(el)el.hidden=only;}
+    const hint=document.getElementById('output-hint');if(hint)hint.textContent=only?'Reconhece somente os acordes. Não transcreve a voz nem busca legendas. Funciona com arquivos, YouTube e microfone.':'Monta os acordes junto com a letra transcrita ou a legenda do YouTube.';
+  }
+  window.setBuildOutput=function(value){state.outputMode=value==='chords'?'chords':'lyrics';prefs.buildOutput=state.outputMode;savePrefs();applyOutput();};
   window.viewBuild=panel;
   window.startBuildFile=async function(file){
     if(!file)return;let id;
@@ -122,7 +131,7 @@
     else if(event.type==='chords'){state.cp=event.progress;state.chords=event.segments||[];update();}
     else if(event.type==='words'){state.wp=event.progress;state.words=event.words||[];update();}
     else if(event.type==='error')fail('Falha no reconhecimento de '+event.stage+': '+event.message);
-    else if(event.type==='complete'){stopWatch();state.activeSource=event.wordSource==='youtube'?'captions':'audio';state.result=event;state.chords=event.chords;state.words=event.words;state.duration=event.duration;state.mode='ready';build.st='ready';panel();}
+    else if(event.type==='complete'){stopWatch();const only=state.activeSource==='chords';state.activeSource=only?'chords':event.wordSource==='youtube'?'captions':'audio';state.result={...event,chordsOnly:only,words:only?[]:event.words||[]};state.chords=event.chords||[];state.words=state.result.words;state.duration=event.duration;state.mode='ready';build.st='ready';panel();}
   };
   window.openSpeechReview=function(){
     if(!state.result||!state.words.length){toast('Não há palavras para revisar.');return;}
@@ -139,8 +148,8 @@
   window.viewNeuralScore=function(){
     if(!state.result)return;let score;try{score=NeuralScore.assemble(state.result);}catch(e){fail('Não consegui organizar os tempos desta música. Tente analisar novamente.');return;}
     if(!score.text){fail('Não encontrei acordes nem palavras neste áudio.');return;}
-    const captions=state.activeSource==='captions',origin=captions?'Montada com legenda do YouTube':'Montada pelo áudio';
-    const pending={id:null,title:state.name||'Cifra montada',artist:'',key:score.key,yt:state.video||'',text:score.text,chords:[],version:origin,versions:[],variants:{},auto:true,caps:captions,youtubeCaptions:captions,captionAutomatic:!!(state.captionInfo&&state.captionInfo.automatic),captionTranslated:!!(state.captionInfo&&state.captionInfo.translated),transcription:!captions,transpose:0,source:origin,url:'',updated:Date.now(),sync:{t:score.tempos.map(t=>Math.round(t*100)/100)},analysis:{engine:captions?'chordai-conformer-youtube-captions':'chordai-conformer-whisper',wordSource:captions?'youtube':'audio',captionLanguage:state.captionInfo&&state.captionInfo.language,captionTranslated:!!(state.captionInfo&&state.captionInfo.translated),captionSourceLanguage:state.captionInfo&&state.captionInfo.sourceLanguage,timingApproximate:!!(state.captionInfo&&state.captionInfo.timingApproximate),speechProfile:captions?'youtube-captions':state.quality==='precise'?'voice-regions-v1':'legacy-whisper',duration:score.duration,words:score.words,chords:score.chords,sections:score.sections}};
+    const only=state.activeSource==='chords',captions=state.activeSource==='captions',origin=only?'Montada somente com acordes':captions?'Montada com legenda do YouTube':'Montada pelo áudio';
+    const pending={id:null,title:state.name||'Cifra montada',artist:'',key:score.key,yt:state.video||'',text:score.text,chords:[],version:origin,versions:[],variants:{},auto:true,caps:captions,youtubeCaptions:captions,captionAutomatic:!!(state.captionInfo&&state.captionInfo.automatic),captionTranslated:!!(state.captionInfo&&state.captionInfo.translated),chordsOnly:only,transcription:!only&&!captions,transpose:0,source:origin,url:'',updated:Date.now(),sync:{t:score.tempos.map(t=>Math.round(t*100)/100)},analysis:{engine:only?'chordai-conformer':captions?'chordai-conformer-youtube-captions':'chordai-conformer-whisper',wordSource:only?'none':captions?'youtube':'audio',captionLanguage:state.captionInfo&&state.captionInfo.language,captionTranslated:!!(state.captionInfo&&state.captionInfo.translated),captionSourceLanguage:state.captionInfo&&state.captionInfo.sourceLanguage,timingApproximate:!!(state.captionInfo&&state.captionInfo.timingApproximate),speechProfile:only?'none':captions?'youtube-captions':state.quality==='precise'?'voice-regions-v1':'legacy-whisper',duration:score.duration,words:score.words,chords:score.chords,sections:score.sections}};
     store.set('tc_pending',pending);build.st='idle';go('/preview');
   };
   window.montarCifraAgora=window.viewNeuralScore;
@@ -158,3 +167,4 @@
   window.TeclaNeuralState=state;
   if(location.hash==='#/montar')panel();
 })();
+

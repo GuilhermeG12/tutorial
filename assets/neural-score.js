@@ -31,6 +31,7 @@
     return name;
   }
   function assemble(input){
+    if(input.chordsOnly)return assembleChords(input);
     const {duration,chords,words}=normalized(input),lines=[],times=[],sections=[];
     const changes=(start,end)=>{
       const list=[];let active=null;
@@ -137,6 +138,30 @@
     if(translated&&String(metadata.targetLanguage||'').toLowerCase().split('-')[0]!==language.toLowerCase().split('-')[0])throw Error('A tradução recebida está em outro idioma. Tente novamente.');
     return {words:unique,automatic,language,timingApproximate:approximate,translated,sourceLanguage:metadata.sourceLanguage||language};
   }
-  const api={assemble,normalized,notation,parseYouTubeCaptions,changesOnly};root.NeuralScore=api;
+  function assembleChords(input){
+    const data=normalized({...input,words:[]}),{duration,chords}=data;
+    const changes=chords,lines=[],times=[],sections=[];
+    if(!changes.length)return {text:'',tempos:[],key:'',sections,words:[],chords,duration,chordsOnly:true};
+    // These are time-based reading sections, not a claim to have recognized
+    // the song's verse/chorus structure without a vocal/structure model.
+    const intro=Math.min(12,duration/4),finalStart=Math.max(intro,duration-Math.min(12,duration/4));
+    const ranges=[{label:'Intro',start:0,end:intro}];
+    let part=1;
+    for(let start=intro;start<finalStart;start+=32)ranges.push({label:'Parte '+part++,start,end:Math.min(finalStart,start+32)});
+    ranges.push({label:'Final',start:finalStart,end:duration});
+    for(const range of ranges){
+      if(!(range.end>range.start))continue;
+      const active=chords.find(c=>c.t0<range.start&&c.t1>range.start);
+      const row=changes.filter(c=>c.t0>=range.start&&c.t0<range.end);
+      if(active&&(!row.length||row[0].t0>range.start))row.unshift({...active,t0:range.start});
+      if(!row.length)continue;
+      lines.push('['+range.label+']');sections.push({type:'instrumental',label:range.label,t0:range.start,t1:range.end,approximate:true});
+      for(let i=0;i<row.length;i+=4){const group=row.slice(i,i+4);lines.push(group.map(c=>c.chord).join('   '));times.push(...group.map(c=>c.t0));}
+      lines.push('');
+    }
+    return {text:lines.join('\n').trim(),tempos:times,key:key(chords),sections,words:[],chords,duration,chordsOnly:true};
+  }
+  const api={assemble,assembleChords,normalized,notation,parseYouTubeCaptions,changesOnly};root.NeuralScore=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
+

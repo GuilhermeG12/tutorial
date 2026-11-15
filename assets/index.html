@@ -861,7 +861,7 @@ function renderSong(){
     if(CMP&&CMP.missing===0){cm.className='cmp ok';cm.textContent='✓ Versão completa (conferida com a letra da música)'}
     else if(CMP){cm.className='cmp bad';cm.textContent=`⚠ Versão incompleta: ${CMP.missing} linha(s) da letra não estão nesta cifra. Elas aparecem marcadas em azul no lugar onde faltam.`}
     else if(lyrLoading.has(s.url)){cm.className='cmp wait';cm.textContent='Conferindo com a letra da música…'}
-    else if(s.auto){cm.className='cmp wait';cm.textContent=s.youtubeCaptions?'Montada com os acordes do áudio e a legenda do YouTube. Confira o alinhamento e corrija o que precisar.':s.transcription?'Montada a partir do áudio, com acordes e transcrição sincronizados. Confira e corrija o que precisar.':s.caps?'Montada pelo app com a legenda do vídeo. Palavras em vermelho podem estar erradas: toque nelas para corrigir. Os acordes são uma estimativa.':'Cifra montada pelo app a partir do áudio. Os acordes são uma estimativa: confira de ouvido.'}
+    else if(s.auto){cm.className='cmp wait';cm.textContent=s.chordsOnly?'Somente acordes reconhecidos do áudio. Intro, partes e final são divisões aproximadas; confira de ouvido.':s.youtubeCaptions?'Montada com os acordes do áudio e a legenda do YouTube. Confira o alinhamento e corrija o que precisar.':s.transcription?'Montada a partir do áudio, com acordes e transcrição sincronizados. Confira e corrija o que precisar.':s.caps?'Montada pelo app com a legenda do vídeo. Palavras em vermelho podem estar erradas: toque nelas para corrigir. Os acordes são uma estimativa.':'Cifra montada pelo app a partir do áudio. Os acordes são uma estimativa: confira de ouvido.'}
     else {cm.className='';cm.textContent=''}
   }
   chordsInOrder=seen;
@@ -1899,7 +1899,7 @@ function viewBackup(){
      Ficam só neste aparelho, sem o áudio, e não treinam a IA sozinhas.</p>
      ${n?`<button class="btn" style="width:100%" onclick="exportCorr()">Exportar correções</button><button class="btn ghost" style="width:100%;margin-top:8px" onclick="apagarCorr()">Apagar correções</button>`:''}
      ${prefs.consentCorr!=null?`<button class="btn ghost" style="width:100%;margin-top:8px" onclick="prefs.consentCorr=${prefs.consentCorr?'false':'true'};savePrefs();viewBackup()">${prefs.consentCorr?'Parar de guardar':'Voltar a guardar'}</button>`:''}</div>`})()}
-   <p class="hint" style="text-align:center">TeclaCifra 4.9 · feito para tecladistas · sem anúncios<br>Reconhecimento local de acordes e voz. Revise os resultados antes de salvar.</p></main>${nav('backup')}`;
+   <p class="hint" style="text-align:center">TeclaCifra 4.10 · feito para tecladistas · sem anúncios<br>Reconhecimento local de acordes e voz. Revise os resultados antes de salvar.</p></main>${nav('backup')}`;
 }
 function exportCorr(){
   const txt=JSON.stringify({app:'TeclaCifra',tipo:'correcoes',...store.get('tc_correcoes',{v:1,itens:[]})});
@@ -1944,3 +1944,4 @@ route();
 </script>
 <script src="neural-build.js"></script></body>
 </html>
+

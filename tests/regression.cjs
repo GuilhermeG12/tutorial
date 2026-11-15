@@ -105,4 +105,30 @@ check('Word review changes spelling without shifting the audio timestamps',()=>{
  const d=app(),w=d.window,state=w.TeclaNeuralState;state.mode='ready';state.words=[{w:'Coracao',t0:2.4,t1:3.1}];state.result={words:state.words,duration:4,chords:[]};
  w.openSpeechReview();w.document.querySelector('#review-words input').value='Coração';w.saveSpeechReview();assert.equal(state.result.words[0].w,'Coração');assert.equal(state.result.words[0].t0,2.4);assert.equal(state.result.words[0].t1,3.1);assert.equal(state.result.words[0].edited,true);d.window.close();
 });
+check('Chords-only option persists and hides speech controls',async()=>{
+ const d=app(),w=d.window;w.location.hash='#/montar';await pause(0);assert.equal(w.document.getElementById('noutput').value,'lyrics');w.setBuildOutput('chords');
+ assert.equal(w.__test.store.get('tc_prefs').buildOutput,'chords');assert.equal(w.document.getElementById('speech-settings').hidden,true);assert.equal(w.document.getElementById('youtube-lyrics').hidden,true);w.setBuildOutput('lyrics');assert.equal(w.document.getElementById('speech-settings').hidden,false);d.window.close();
+});
+check('Chords-only microphone explicitly disables the native speech worker',async()=>{
+ const d=app(),w=d.window;let profile='';w.Android.setSpeechQuality=x=>profile=x;w.Android.captureStart=()=>{};w.location.hash='#/montar';await pause(0);w.document.getElementById('noutput').value='chords';w.setBuildOutput('chords');w.startNeuralMic();assert.equal(profile,'chords-only');assert.equal(w.TeclaNeuralState.activeSource,'chords');w.cancelBuild();d.window.close();
+});
+check('Chords-only YouTube does not request captions',async()=>{
+ const d=app(),w=d.window;let wantsCaptions=true;w.Android.setSpeechQuality=()=>{};w.Android.httpGet=id=>setTimeout(()=>w.onFetched(id,JSON.stringify({title:'Música teste',author_name:'Artista'})),0);w.Android.extrairAudioNeural=(video,id,language,captions)=>{wantsCaptions=captions;};
+ w.location.hash='#/montar';await pause(0);w.document.getElementById('noutput').value='chords';w.setBuildOutput('chords');w.document.getElementById('blink').value='https://www.youtube.com/watch?v=abcdefghijk';await w.startBuildLink();assert.equal(wantsCaptions,false);assert.equal(w.TeclaNeuralState.activeSource,'chords');w.cancelBuild();d.window.close();
+});
+check('Chords-only completion stays lyric-free despite native source metadata',async()=>{
+ const d=app(),w=d.window,state=w.TeclaNeuralState;w.location.hash='#/montar';await pause(0);state.id='only';state.activeSource='chords';state.mode='run';w.onNeural('only',{type:'complete',wordSource:'audio',duration:20,chords:[{chord:'C',t0:0,t1:20}],words:[{w:'ignored',t0:1,t1:2}]});
+ assert.equal(state.activeSource,'chords');assert.equal(state.result.chordsOnly,true);assert.equal(state.result.words.length,0);assert.equal(w.document.querySelector('[onclick="openSpeechReview()"]'),null);d.window.close();
+});
+check('Chords-only score covers the full track with approximate Intro, parts and Final',()=>{
+ const score=require(path.join(assets,'neural-score.js'));const chords=Array.from({length:24},(_,i)=>({chord:['C','G','Am','F'][i%4],t0:i*4,t1:(i+1)*4}));const out=score.assemble({chordsOnly:true,duration:96,chords,words:[{w:'MustNotAppear',t0:2,t1:3}]});
+ assert.ok(out.text.includes('[Intro]'));assert.ok(out.text.includes('[Parte 1]'));assert.ok(out.text.includes('[Final]'));assert.ok(!out.text.includes('MustNotAppear'));assert.equal(out.words.length,0);assert.ok(out.tempos.includes(92));assert.ok(out.tempos.every((t,i)=>i===0||t>=out.tempos[i-1]));assert.ok(out.sections.every(s=>s.approximate));
+});
+check('Repeated chord after a silent gap remains in the chord-only score',()=>{
+ const score=require(path.join(assets,'neural-score.js'));const out=score.assemble({chordsOnly:true,duration:30,chords:[{chord:'C',t0:0,t1:2},{chord:'C',t0:15,t1:17},{chord:'G',t0:28,t1:30}]});assert.ok(out.tempos.includes(15));assert.ok(out.tempos.includes(28));
+});
+check('Chords-only save records no transcription and keeps synchronized chord timestamps',async()=>{
+ const d=app(),w=d.window,state=w.TeclaNeuralState;state.activeSource='chords';state.name='Somente acordes';state.result={chordsOnly:true,duration:40,chords:[{chord:'C',t0:0,t1:10},{chord:'G',t0:10,t1:20},{chord:'F',t0:20,t1:40}],words:[]};w.viewNeuralScore();const pending=w.__test.store.get('tc_pending');assert.equal(pending.chordsOnly,true);assert.equal(pending.transcription,false);assert.equal(pending.analysis.wordSource,'none');assert.equal(pending.analysis.words.length,0);assert.ok(pending.sync.t.length>0);d.window.close();
+});
 (async()=>{let failures=0;for(const [name,fn]of checks){try{await fn();console.log('PASS',name);}catch(e){failures++;console.error('FAIL',name,e.stack);}}console.log(`${checks.length-failures}/${checks.length} checks passed`);process.exitCode=failures?1:0;})();
+

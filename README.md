@@ -1,6 +1,14 @@
-# Tecla Cifra 4.9
+# Tecla Cifra 4.10
 
 Projeto de manutenção recuperado do APK TeclaCifra 4.7 fornecido pelo proprietário. A interface e os fluxos de importação estão em `assets/`. Os modelos de IA e as bibliotecas nativas vêm do APK base. A versão 4.9 acrescenta classes Java para o fluxo de transcrição e para o tema, e liga essas classes à camada Android recuperada. O repositório não contém todo o código-fonte Android original.
+
+## Novidades da versão 4.10
+
+- Opção global em Montar: com transcrição ou sem transcrição (somente acordes).
+- Vale para arquivos de áudio/vídeo, YouTube e microfone.
+- No modo somente acordes o worker de voz retorna sem carregar Whisper/VAD, e a extração do YouTube não solicita legendas.
+- Intro, partes e final organizam os acordes por tempo, com aviso de que a divisão é aproximada. Não há inferência de refrão/verso sem um modelo de estrutura musical.
+- O modo com letra, a revisão de palavras, o tema escuro e as correções anteriores continuam disponíveis.
 
 ## Novidades da versão 4.9
 
@@ -31,7 +39,7 @@ Requer Java com o módulo jdk.compiler, Python 3, Apktool 2.12.1 e uber-apk-sign
 python3 build.py --base /caminho/TeclaCifra-4.7.apk --apktool /caminho/apktool.jar --signer /caminho/uber-apk-signer.jar
 ```
 
-A saída usa `com.teclacifra.fix`, versão 4.9/código 14, e instala separadamente de `com.teclacifra.app`. Os nomes completos da atividade e do serviço originais são preservados. Sem a chave original não é possível produzir uma atualização assinada compatível com a instalação 4.7. Para migrar músicas, exporte o backup na versão antiga e restaure na nova.
+A saída usa `com.teclacifra.fix`, versão 4.10/código 15, e instala separadamente de `com.teclacifra.app`. Os nomes completos da atividade e do serviço originais são preservados. Sem a chave original não é possível produzir uma atualização assinada compatível com a instalação 4.7. Para migrar músicas, exporte o backup na versão antiga e restaure na nova.
 
 O assinador usa uma chave de desenvolvimento se nenhuma chave for configurada. Para distribuição definitiva, estabeleça uma chave de assinatura própria e estável.
 
@@ -43,6 +51,7 @@ python3 tests/fetch_fixtures.py
 node tests/regression.cjs
 ```
 
-São 19 verificações de importação, alinhamento, fila, timeout, navegação, backup e eventos atrasados. Os testes de sites usam amostras baixadas durante a execução e não publicam letras no repositório. A validação do APK inclui assinatura, integridade do ZIP e comparação da camada nativa/modelos com o original. Ainda é necessário validar no aparelho Android o microfone, a memória, as redes reais e a precisão musical dos modelos. Sites podem exigir verificação ou alterar sua estrutura; o aplicativo informa falha e oferece abrir a página original nesses casos.
+São 26 verificações de importação, alinhamento, fila, timeout, navegação, backup e eventos atrasados. Os testes de sites usam amostras baixadas durante a execução e não publicam letras no repositório. A validação do APK inclui assinatura, integridade do ZIP e comparação da camada nativa/modelos com o original. Ainda é necessário validar no aparelho Android o microfone, a memória, as redes reais e a precisão musical dos modelos. Sites podem exigir verificação ou alterar sua estrutura; o aplicativo informa falha e oferece abrir a página original nesses casos.
 
 A inspiração técnica no Vibe e as limitações de validação estão descritas em [docs/vibe-analysis.md](docs/vibe-analysis.md).
+

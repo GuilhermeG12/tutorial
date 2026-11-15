@@ -15,10 +15,12 @@ import org.json.JSONObject;
 /** Voice-region transcription retaining original audio timestamps. */
 public final class SpeechPipeline {
     private static volatile boolean precise = true;
+    private static volatile boolean chordsOnly = false;
     private static final int SR = 16000;
     private SpeechPipeline() {}
 
     public static void setProfile(String profile) {
+        chordsOnly = "chords-only".equals(profile);
         precise = !"balanced".equals(profile);
     }
 
@@ -28,6 +30,10 @@ public final class SpeechPipeline {
 
     public static JSONArray recognize(Context context, File file, long samples,
             String language, BooleanSupplier cancelled, SpeechNetwork.Progress progress) throws Exception {
+        check(cancelled);
+        // In this mode the chord worker still analyzes the full PCM. The
+        // speech worker finishes without loading Whisper, VAD or speech assets.
+        if (chordsOnly) return new JSONArray();
         if (!precise) return SpeechNetwork.recognizeLegacy(context,file,samples,language,cancelled,progress);
         check(cancelled);
         final double duration = samples / (double)SR;
@@ -142,3 +148,4 @@ public final class SpeechPipeline {
         JSONArray result=new JSONArray();for(JSONObject word:words)result.put(word);return result;
     }
 }
+
