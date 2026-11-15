@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const bridge=window.Android;
-  const state={mode:'idle',id:'',name:'',link:'',video:'',language:'pt',youtubeSource:'captions',activeSource:'audio',captionInfo:null,chords:[],words:[],cp:0,wp:0,upload:0,duration:0,result:null,error:'',serial:0};
+  const state={mode:'idle',id:'',name:'',link:'',video:'',language:'pt',youtubeSource:'captions',activeSource:'audio',captionInfo:null,chords:[],words:[],cp:0,wp:0,upload:0,duration:0,result:null,error:'',serial:0,quality:prefs.speechQuality||'precise'};
   const originalPlayer=window.onPlayer;
   let stageTimer=null;
   function watchStage(ms,message){clearTimeout(stageTimer);stageTimer=setTimeout(()=>{if(state.mode!=='idle'&&state.mode!=='ready'&&state.mode!=='error')fail(message);},ms);}
@@ -18,6 +18,7 @@
         <div class="card"><h3>Do áudio para a cifra</h3><p class="hint">Acordes e palavras são reconhecidos no próprio áudio. A cifra inclui a introdução, os intervalos instrumentais e o final.</p>
         <input class="in" id="nname" placeholder="Nome da música" value="${esc(state.name)}">
         <label class="hint" for="nlang" style="display:block;margin-top:12px">Idioma da letra</label><select class="in" style="margin-top:8px" id="nlang">${languages()}</select>
+        <label class="hint" for="nquality" style="display:block;margin-top:12px">Transcrição</label><select class="in" id="nquality"><option value="precise">Mais precisa · por trechos de voz</option><option value="balanced">Equilibrada · método anterior</option></select><p class="hint">O modo mais preciso revisita finais de voz sem transcrição e pode demorar mais. Para músicas em português, mantenha Português.</p>
         <label class="btn" style="display:block;text-align:center;margin-top:12px">Escolher áudio ou vídeo<input type="file" accept="audio/*,video/*" style="display:none" onchange="startBuildFile(this.files[0])"></label></div>
         <div class="card"><h3>Pelo link do YouTube</h3><input class="in" id="blink" placeholder="https://youtube.com/watch?v=…" value="${esc(state.link)}">
         <label class="hint" for="nsource" style="display:block;margin-top:12px">Como obter a letra</label>
@@ -26,7 +27,7 @@
         <button class="btn ghost" style="width:100%;margin-top:10px" onclick="startBuildLink()">Montar cifra do vídeo</button></div>
         <button class="btn ghost" style="width:100%" onclick="startNeuralMic()">Ouvir pelo microfone</button>
         <p class="hint">Você poderá revisar a transcrição e os acordes antes de salvar.</p></main>${nav('montar')}`;
-      document.getElementById('nlang').value=state.language;document.getElementById('nsource').value=state.youtubeSource;return;
+      document.getElementById('nquality').value=state.quality;document.getElementById('nlang').value=state.language;document.getElementById('nsource').value=state.youtubeSource;return;
     }
     if(state.mode==='ready'){
       app.innerHTML=`<header class="top"><h1>Cifra montada</h1></header><main><div class="card"><h3>Análise concluída</h3>
@@ -36,7 +37,7 @@
         ${state.captionInfo&&state.captionInfo.translated?`<p class="hint">Traduzida automaticamente pelo YouTube a partir de ${esc(languageNames[languageBase(state.captionInfo.sourceLanguage)]||state.captionInfo.sourceLanguage)}. A tradução pode manter erros da legenda original.</p>`:''}
         ${state.captionInfo&&state.captionInfo.timingApproximate?'<p class="hint">Esta legenda não informa todos os tempos por palavra; parte do alinhamento é aproximada.</p>':''}
         ${!state.words.length?'<p class="hint">Nenhuma palavra foi reconhecida. O resultado contém os acordes instrumentais; confira se havia voz no áudio.</p>':''}
-        <button class="btn" style="width:100%" onclick="viewNeuralScore()">Ver cifra montada</button>
+        <button class="btn ghost" style="width:100%;margin-bottom:10px" onclick="openSpeechReview()">Revisar palavras reconhecidas</button><button class="btn" style="width:100%" onclick="viewNeuralScore()">Ver cifra montada</button>
         <button class="btn ghost" style="width:100%;margin-top:8px" onclick="cancelBuild()">Analisar outro áudio</button></div></main>${nav('montar')}`;return;
     }
     app.innerHTML=`<header class="top"><h1>Montar cifra</h1></header><main><div class="card">
@@ -61,6 +62,7 @@
   function prepare(name,activeSource='audio'){
     stopWatch();readyBridge();try{bridge.neuralCancel();bridge.captureStop();bridge.playerStop();}catch(e){}const lang=document.getElementById('nlang');state.language=lang?lang.value:state.language;
     if(activeSource==='captions'&&state.language==='auto')state.language='pt';
+    const quality=document.getElementById('nquality');state.quality=quality&&quality.value==='balanced'?'balanced':'precise';prefs.speechQuality=state.quality;savePrefs();try{if(bridge.setSpeechQuality)bridge.setSpeechQuality(state.quality);}catch(e){}
     state.name=name||state.name||'Áudio';state.id='n'+Date.now()+'_'+(++state.serial);
     Object.assign(state,{activeSource,captionInfo:null,cp:0,wp:0,upload:0,chords:[],words:[],result:null,error:'',duration:0});
     build.token++;build.st='run';return state.id;
@@ -122,12 +124,23 @@
     else if(event.type==='error')fail('Falha no reconhecimento de '+event.stage+': '+event.message);
     else if(event.type==='complete'){stopWatch();state.activeSource=event.wordSource==='youtube'?'captions':'audio';state.result=event;state.chords=event.chords;state.words=event.words;state.duration=event.duration;state.mode='ready';build.st='ready';panel();}
   };
+  window.openSpeechReview=function(){
+    if(!state.result||!state.words.length){toast('Não há palavras para revisar.');return;}
+    closeSheet();const sheet=document.createElement('div');sheet.className='sheet-bg';sheet.id='sheet';
+    sheet.innerHTML=`<div class="sheet"><h2>Revisar transcrição</h2><p class="hint">Corrija as palavras sem alterar os tempos de áudio. Deixe vazio para retirar uma palavra.</p><div id="review-words" style="max-height:55vh;overflow:auto">${state.words.map((word,i)=>`<label style="display:flex;align-items:center;gap:10px;margin-bottom:7px"><small class="hint" style="min-width:48px">${fmtT(word.t0)}</small><input class="in" data-word="${i}" aria-label="Palavra ${i+1}" value="${esc(word.w)}"></label>`).join('')}</div><button class="btn" style="width:100%;margin-top:12px" onclick="saveSpeechReview()">Aplicar revisão</button><button class="btn ghost" style="width:100%;margin-top:8px" onclick="closeSheet()">Cancelar</button></div>`;
+    document.body.appendChild(sheet);
+  };
+  window.saveSpeechReview=function(){
+    const inputs=document.querySelectorAll('#review-words input'),words=[];
+    inputs.forEach(input=>{const previous=state.words[+input.dataset.word],text=input.value.trim();if(text)words.push({...previous,w:text,edited:previous.edited||text!==previous.w});});
+    state.words=words;state.result.words=words;closeSheet();panel();toast('Revisão aplicada');
+  };
   window.cancelBuild=function(){stopWatch();state.id='';state.serial++;state.mode='idle';state.error='';build.token++;build.st='idle';try{bridge&&bridge.neuralCancel();bridge&&bridge.captureStop();bridge&&bridge.playerStop();}catch(e){}panel();};
   window.viewNeuralScore=function(){
     if(!state.result)return;let score;try{score=NeuralScore.assemble(state.result);}catch(e){fail('Não consegui organizar os tempos desta música. Tente analisar novamente.');return;}
     if(!score.text){fail('Não encontrei acordes nem palavras neste áudio.');return;}
     const captions=state.activeSource==='captions',origin=captions?'Montada com legenda do YouTube':'Montada pelo áudio';
-    const pending={id:null,title:state.name||'Cifra montada',artist:'',key:score.key,yt:state.video||'',text:score.text,chords:[],version:origin,versions:[],variants:{},auto:true,caps:captions,youtubeCaptions:captions,captionAutomatic:!!(state.captionInfo&&state.captionInfo.automatic),captionTranslated:!!(state.captionInfo&&state.captionInfo.translated),transcription:!captions,transpose:0,source:origin,url:'',updated:Date.now(),sync:{t:score.tempos.map(t=>Math.round(t*100)/100)},analysis:{engine:captions?'chordai-conformer-youtube-captions':'chordai-conformer-whisper',wordSource:captions?'youtube':'audio',captionLanguage:state.captionInfo&&state.captionInfo.language,captionTranslated:!!(state.captionInfo&&state.captionInfo.translated),captionSourceLanguage:state.captionInfo&&state.captionInfo.sourceLanguage,timingApproximate:!!(state.captionInfo&&state.captionInfo.timingApproximate),duration:score.duration,words:score.words,chords:score.chords,sections:score.sections}};
+    const pending={id:null,title:state.name||'Cifra montada',artist:'',key:score.key,yt:state.video||'',text:score.text,chords:[],version:origin,versions:[],variants:{},auto:true,caps:captions,youtubeCaptions:captions,captionAutomatic:!!(state.captionInfo&&state.captionInfo.automatic),captionTranslated:!!(state.captionInfo&&state.captionInfo.translated),transcription:!captions,transpose:0,source:origin,url:'',updated:Date.now(),sync:{t:score.tempos.map(t=>Math.round(t*100)/100)},analysis:{engine:captions?'chordai-conformer-youtube-captions':'chordai-conformer-whisper',wordSource:captions?'youtube':'audio',captionLanguage:state.captionInfo&&state.captionInfo.language,captionTranslated:!!(state.captionInfo&&state.captionInfo.translated),captionSourceLanguage:state.captionInfo&&state.captionInfo.sourceLanguage,timingApproximate:!!(state.captionInfo&&state.captionInfo.timingApproximate),speechProfile:captions?'youtube-captions':state.quality==='precise'?'voice-regions-v1':'legacy-whisper',duration:score.duration,words:score.words,chords:score.chords,sections:score.sections}};
     store.set('tc_pending',pending);build.st='idle';go('/preview');
   };
   window.montarCifraAgora=window.viewNeuralScore;

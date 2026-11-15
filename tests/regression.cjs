@@ -1,5 +1,6 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
+const vm=require('node:vm');
 const path=require('node:path');
 const {JSDOM,VirtualConsole}=require('./runtime/node_modules/jsdom');
 const assets=path.resolve(__dirname,'../assets');
@@ -12,14 +13,13 @@ function dom(html='<body></body>',url='https://www.cifras.com.br/cifra/artista/m
  d.window.scrollTo=()=>{};d.window.HTMLElement.prototype.scrollIntoView=()=>{};
  return d;
 }
-function app(){
+function app(initialPrefs){
  const html=read('index.html'),d=dom(html,'https://teclacifra.test/#/');
  const w=d.window;w.Android={keepScreenOn(){},playerStop(){},httpGet(){},fetchPage(){},neuralCancel(){},captureStop(){},neuralBegin(){return '';},neuralAppend(){return '';},neuralFinish(){return '';}};
- w.alert=()=>{};w.confirm=()=>true;
- w.eval(read('neural-score.js'));w.eval(read('score-layout.js'));w.eval(read('request-bridge.js'));
+ w.alert=()=>{};w.confirm=()=>true;if(initialPrefs)w.localStorage.setItem('tc_prefs',JSON.stringify(initialPrefs));
+ const ctx=d.getInternalVMContext();vm.runInContext(read('neural-score.js'),ctx);vm.runInContext(read('score-layout.js'),ctx);vm.runInContext(read('request-bridge.js'),ctx);
  const inline=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].find(m=>m[1].includes('function route()'))[1];
- w.eval(inline+'\nwindow.__test={get songs(){return songs},get prefs(){return prefs},get srch(){return srch},get cur(){return cur},get inflight(){return inflight},store,setSongs:v=>songs=v,saveSongs,fetchPage,httpGet,quickSearch,runSearch,viewSong,route,viewBackup,importData,exportData,chooseVersion,openImported,renderSong,parseChord,renderCifra,viewSearch,shiftKey};');
- w.eval(read('neural-build.js'));return d;
+ vm.runInContext(inline+'\nwindow.__test={get songs(){return songs},get prefs(){return prefs},get srch(){return srch},get cur(){return cur},get inflight(){return inflight},store,setSongs:v=>songs=v,saveSongs,fetchPage,httpGet,quickSearch,runSearch,viewSong,route,viewBackup,importData,exportData,chooseVersion,openImported,renderSong,parseChord,renderCifra,viewSearch,shiftKey,toggleTheme,applyTheme,viewBuild};',ctx);vm.runInContext(read('neural-build.js'),ctx);return d;
 }
 function extraction(d,mode){const f=d.window.eval(read('extract.js'));let x=f(mode);if(x===null)x=f(mode);return x?JSON.parse(x):null;}
 check('Cifras.com.br real HTML: complete score, BRs and chord attributes',()=>{
@@ -86,5 +86,23 @@ check('Neural output: invalid timestamps and no-chord labels do not break sync',
 });
 check('Neural events after leaving the build screen cannot change the page',async()=>{
  const d=app(),w=d.window;w.TeclaNeuralState.id='current';w.TeclaNeuralState.mode='run';w.onNeural('current',{type:'complete',duration:10,chords:[],words:[]});assert.ok(w.document.querySelector('#list'));assert.notEqual(w.TeclaNeuralState.mode,'ready');d.window.close();
+});
+check('Dark theme button persists and updates system bars',()=>{
+ const d=app(),w=d.window,t=w.__test;let nativeTheme='';w.Android.setAppTheme=x=>nativeTheme=x;
+ assert.ok(w.document.getElementById('theme-toggle'));t.toggleTheme();
+ assert.equal(w.document.documentElement.dataset.theme,'dark');assert.equal(t.store.get('tc_prefs').theme,'dark');assert.equal(nativeTheme,'dark');assert.equal(w.document.getElementById('theme-toggle').getAttribute('aria-pressed'),'true');
+ t.toggleTheme();assert.equal(w.document.documentElement.dataset.theme,'light');d.window.close();
+});
+check('Saved dark theme restores on launch and remains during navigation',async()=>{
+ const d=app({theme:'dark'}),w=d.window;assert.equal(w.document.documentElement.dataset.theme,'dark');w.location.hash='#/backup';await pause(0);assert.equal(w.document.documentElement.dataset.theme,'dark');d.window.close();
+});
+check('Transcription quality reaches native bridge and is saved',async()=>{
+ const d=app(),w=d.window;let quality='';w.Android.setSpeechQuality=x=>quality=x;w.Android.captureStart=()=>{};
+ w.location.hash='#/montar';await pause(0);assert.equal(w.document.getElementById('nquality').value,'precise');w.document.getElementById('nquality').value='balanced';w.startNeuralMic();
+ assert.equal(quality,'balanced');assert.equal(w.__test.store.get('tc_prefs').speechQuality,'balanced');w.cancelBuild();d.window.close();
+});
+check('Word review changes spelling without shifting the audio timestamps',()=>{
+ const d=app(),w=d.window,state=w.TeclaNeuralState;state.mode='ready';state.words=[{w:'Coracao',t0:2.4,t1:3.1}];state.result={words:state.words,duration:4,chords:[]};
+ w.openSpeechReview();w.document.querySelector('#review-words input').value='Coração';w.saveSpeechReview();assert.equal(state.result.words[0].w,'Coração');assert.equal(state.result.words[0].t0,2.4);assert.equal(state.result.words[0].t1,3.1);assert.equal(state.result.words[0].edited,true);d.window.close();
 });
 (async()=>{let failures=0;for(const [name,fn]of checks){try{await fn();console.log('PASS',name);}catch(e){failures++;console.error('FAIL',name,e.stack);}}console.log(`${checks.length-failures}/${checks.length} checks passed`);process.exitCode=failures?1:0;})();

@@ -7,6 +7,7 @@
 <title>TeclaCifra</title>
 <style>
 :root{
+  color-scheme:light;
   --bg:#ffffff; --soft:#f5f5f6; --text:#222222; --muted:#707078; --line:#e7e7ea;
   --orange:#ff6600; --orange-d:#e65c00; --orange-soft:#fff1e6;
   --bass:#2f6fe4; --white-key:#ffffff; --black-key:#2b2b30; --key-line:#b9bdc6;
@@ -15,7 +16,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:Roboto,system-ui,-apple-system,"Segoe UI",sans-serif}
 button{font:inherit;color:inherit}
-.top{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line);padding:6px 8px;display:flex;align-items:center;gap:4px;height:54px}
+.top{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line);padding:6px 8px;display:flex;align-items:center;gap:4px;height:54px}
 .top h1{font-size:19px;margin:0 0 0 6px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 .brand b{color:var(--orange)}
 .ibtn{background:transparent;border:0;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;cursor:pointer;flex:none}
@@ -23,7 +24,7 @@ button{font:inherit;color:inherit}
 .ibtn svg{width:24px;height:24px}
 main{padding:12px 16px 100px;max-width:860px;margin:0 auto}
 .search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--text);font-size:16px;outline:none}
-.search:focus{border-color:var(--orange);background:#fff}
+.search:focus{border-color:var(--orange);background:var(--bg)}
 .list{margin-top:12px;display:flex;flex-direction:column}
 .item{padding:12px 4px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--line)}
 .item:active{background:var(--soft)}
@@ -34,13 +35,13 @@ main{padding:12px 16px 100px;max-width:860px;margin:0 auto}
 .empty{color:var(--muted);text-align:center;padding:40px 10px;line-height:1.5}
 .fab{position:fixed;right:18px;bottom:80px;width:56px;height:56px;border-radius:50%;background:var(--orange);color:#fff;border:0;box-shadow:0 4px 14px rgba(0,0,0,.22);display:grid;place-items:center;cursor:pointer;z-index:15}
 .fab svg{width:26px;height:26px}
-.nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:20}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);display:flex;z-index:20}
 .nav button{flex:1;background:none;border:0;padding:8px 0 9px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);cursor:pointer}
 .nav button.on{color:var(--orange);font-weight:700}
 .nav svg{width:23px;height:23px}
 /* ----- música (padrão Cifra Club) ----- */
 .song{padding-top:14px;padding-bottom:190px}
-.st{font-size:27px;line-height:1.15;margin:0;font-weight:700;color:#111}
+.st{font-size:27px;line-height:1.15;margin:0;font-weight:700;color:var(--text)}
 .sa{font-size:17px;margin:4px 0 0;font-weight:400;color:var(--muted)}
 .sm{margin:12px 0 16px;font-size:15px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
 .tomb{background:none;border:0;padding:0;color:var(--orange);font-weight:700;font-size:16px;cursor:pointer}
@@ -70,7 +71,7 @@ body.tocando{padding-top:204px}body.tocando .top{top:204px}body.tocando .cbar.pi
 .c:active,.c.hl{background:var(--orange-soft)}
 .sec{color:var(--text)}
 .tgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.tgrid button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 0 7px;font-weight:700;font-size:15px;cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.tgrid button{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 0 7px;font-weight:700;font-size:15px;cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.1}
 .tgrid button small{font-size:9px;font-weight:600;color:var(--muted)}
 .tgrid button.on{background:var(--orange);border-color:var(--orange);color:#fff}
 .tgrid button.on small{color:#fff}
@@ -86,19 +87,19 @@ body.tocando{padding-top:204px}body.tocando .top{top:204px}body.tocando .cbar.pi
 .loading{display:flex;align-items:center;gap:12px;color:var(--muted);padding:14px 4px;font-size:15px}
 .srcl{font-size:12px;font-weight:700;margin-left:auto;flex:none}
 .schips{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px}
-.schips button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:14px;cursor:pointer}
+.schips button{flex:none;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 13px;font-size:14px;cursor:pointer}
 .schips button.on{background:var(--orange);border-color:var(--orange);color:#fff;font-weight:700}
 /* barra de acordes */
-.cbar{display:none;background:#fff;border-bottom:1px solid var(--line);z-index:25;box-shadow:0 6px 14px rgba(0,0,0,.08)}
+.cbar{display:none;background:var(--bg);border-bottom:1px solid var(--line);z-index:25;box-shadow:0 6px 14px rgba(0,0,0,.08)}
 .cbar.pinned{display:block;position:sticky;top:54px}
 .cbar.open{display:block;position:fixed;top:54px;left:0;right:0}
 .cbh{display:flex;align-items:center;gap:6px;padding:6px 10px 0}
 .cbh .ttl{font-size:13px;font-weight:700;color:var(--muted);flex:1}
-.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.pill{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px}
 .pill svg{width:14px;height:14px}
 .pill.on{background:var(--orange);border-color:var(--orange);color:#fff}
 .cbs{display:flex;gap:8px;overflow-x:auto;padding:8px 10px 10px;scroll-behavior:smooth;align-items:flex-end}
-.cc{flex:none;border:1.5px solid var(--line);border-radius:10px;padding:5px 7px 4px;cursor:pointer;text-align:center;background:#fff}
+.cc{flex:none;border:1.5px solid var(--line);border-radius:10px;padding:5px 7px 4px;cursor:pointer;text-align:center;background:var(--bg)}
 .cc b{display:block;color:var(--orange);font-size:14px;margin-bottom:3px}
 .cc.cur{border-color:var(--orange)}
 .cc.sel{border-color:var(--orange);background:var(--orange-soft);padding:6px 9px}
@@ -106,16 +107,16 @@ body.tocando{padding-top:204px}body.tocando .top{top:204px}body.tocando .cbar.pi
 .cc .nt{font-size:11px;color:var(--muted);margin-top:3px}
 .cc svg{display:block;margin:0 auto}
 /* barra inferior da música */
-.stb{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;z-index:22}
+.stb{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);display:flex;z-index:22}
 .stb button{flex:1;background:none;border:0;padding:7px 0 8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:#444;cursor:pointer}
 .stb button.on{color:var(--orange);font-weight:700}
 .stb button.hot{color:var(--orange)}
 .stb svg{width:22px;height:22px}
-.panel{position:fixed;left:0;right:0;bottom:58px;background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 16px rgba(0,0,0,.08);padding:12px 16px;z-index:21;display:none}
+.panel{position:fixed;left:0;right:0;bottom:58px;background:var(--bg);border-top:1px solid var(--line);box-shadow:0 -6px 16px rgba(0,0,0,.08);padding:12px 16px;z-index:21;display:none}
 .panel.show{display:block}
 .prow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .step{display:flex;align-items:center;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.step button{background:#fff;border:0;width:46px;height:42px;font-size:20px;font-weight:700;cursor:pointer}
+.step button{background:var(--bg);border:0;width:46px;height:42px;font-size:20px;font-weight:700;cursor:pointer}
 .step button:active{background:var(--orange-soft)}
 .step .v{min-width:46px;text-align:center;font-weight:700;color:var(--orange);font-size:17px}
 .plnav{position:fixed;left:0;right:0;bottom:58px;background:var(--soft);border-top:1px solid var(--line);display:flex;align-items:center;z-index:20;font-size:14px}
@@ -125,26 +126,26 @@ body.tocando{padding-top:204px}body.tocando .top{top:204px}body.tocando .cbar.pi
 input[type=range]{accent-color:var(--orange);flex:1;min-width:140px}
 /* janelas */
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:#fff;width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:18px 16px 22px;max-height:88vh;overflow:auto}
+.sheet{background:var(--bg);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:18px 16px 22px;max-height:88vh;overflow:auto}
 .sheet h2{margin:0 0 12px;font-size:20px}
 .chk{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer;font-size:16px}
 .chk input{width:20px;height:20px;accent-color:var(--orange)}
 .chk small{color:var(--muted);margin-left:auto}
 /* formulários e cartões */
 label.f{display:block;font-size:13px;color:var(--muted);margin:14px 0 4px}
-input.in,textarea.in{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--text);font-size:16px;outline:none}
+input.in,textarea.in{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:16px;outline:none}
 input.in:focus,textarea.in:focus{border-color:var(--orange)}
 textarea.in{min-height:46vh;font-family:var(--mono);font-size:14px;white-space:pre;overflow-x:auto}
 .row{display:flex;gap:8px;align-items:center}
 .row>*{flex:1}
 .btn{border:0;border-radius:11px;padding:12px 16px;font-weight:700;cursor:pointer;background:var(--orange);color:#fff;font-size:15px}
 .btn.sm{padding:8px 12px;font-size:14px;flex:none}
-.btn.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
-.btn.danger{background:#fff;color:#d43c3c;border:1px solid #d43c3c}
+.btn.ghost{background:var(--bg);color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:var(--bg);color:#d43c3c;border:1px solid #d43c3c}
 .hint{font-size:13px;color:var(--muted);line-height:1.55}
-.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
 .card h3{margin:0 0 8px;font-size:16px}
-.src{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;cursor:pointer;background:#fff}
+.src{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;cursor:pointer;background:var(--bg)}
 .src:active{background:var(--soft)}
 .src .num{color:var(--muted);font-weight:700;width:18px;text-align:right}
 .src .lg{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;flex:none}
@@ -154,23 +155,31 @@ textarea.in{min-height:46vh;font-family:var(--mono);font-size:14px;white-space:p
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .chips button{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer}
 .roots{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.roots button,.types button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 0;cursor:pointer;font-weight:600}
+.roots button,.types button{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:9px 0;cursor:pointer;font-weight:600}
 .roots button.on,.types button.on{background:var(--orange);color:#fff;border-color:var(--orange)}
 .types{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
 .types button{font-size:13px;padding:9px 2px}
 .seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.seg button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;font-size:14px}
+.seg button{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:8px 12px;cursor:pointer;font-size:14px}
 .seg button.on{background:var(--orange);color:#fff;border-color:var(--orange)}
 .kbwrap{overflow-x:auto}
 .kbwrap svg{display:block;max-width:100%;height:auto}
 /* playlist em modo edição */
-.pli{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);background:#fff;user-select:none;-webkit-user-select:none}
+.pli{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);background:var(--bg);user-select:none;-webkit-user-select:none}
 .pli.drag{box-shadow:0 6px 18px rgba(0,0,0,.18);border-radius:10px;position:relative;z-index:5}
 .handle{touch-action:none;cursor:grab;width:40px;height:40px;display:grid;place-items:center;color:var(--muted);flex:none}
 .handle svg{width:22px;height:22px}
 .pli .tx{flex:1;min-width:0}
 .pli .tx div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .toast{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:10px;z-index:60;font-size:14px;max-width:90vw;text-align:center}
+
+:root[data-theme="dark"]{color-scheme:dark;--bg:#15171c;--soft:#222630;--text:#edf0f7;--muted:#aeb6c6;--line:#363d4c;--orange:#ff9b57;--orange-d:#ffb47e;--orange-soft:#3c2a1f;--bass:#82b0ff}
+:root[data-theme="dark"] .unsaved{border-color:#775034}
+:root[data-theme="dark"] .cmp.ok{background:#183a2b;color:#a9e4bd}
+:root[data-theme="dark"] .cmp.bad{background:#3d2e18;color:#f3ce92}
+:root[data-theme="dark"] .toast{background:#e6e9f2;color:#15171c}
+:root[data-theme="dark"] .btn:not(.ghost):not(.danger),:root[data-theme="dark"] .fab{color:#21160f}
+.theme-toggle{min-width:44px;font-size:23px}
 </style>
 </head>
 <body>
@@ -327,7 +336,7 @@ const store={
 };
 let songs=store.get('tc_songs',null);
 let playlists=store.get('tc_playlists',[]);
-let prefs=Object.assign({font:15,speed:4,simple:false,pin:true},store.get('tc_prefs',{}));
+let prefs=Object.assign({font:15,speed:4,simple:false,pin:true,theme:'light',speechQuality:'precise'},store.get('tc_prefs',{}));
 let recent=store.get('tc_recent',[]);
 const DEMO=`[Intro] C  G/B  Am  F
 
@@ -361,6 +370,14 @@ if(!songs){
 const saveSongs=()=>store.set('tc_songs',songs);
 const savePls=()=>store.set('tc_playlists',playlists);
 const savePrefs=()=>store.set('tc_prefs',prefs);
+function applyTheme(){
+ const theme=prefs.theme==='dark'?'dark':'light';document.documentElement.dataset.theme=theme;
+ const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=theme==='dark'?'#15171c':'#ffffff';
+ const button=document.getElementById('theme-toggle');if(button){button.textContent=theme==='dark'?'☀':'☾';button.setAttribute('aria-label',theme==='dark'?'Ativar tema claro':'Ativar tema escuro');button.setAttribute('aria-pressed',String(theme==='dark'));}
+ try{if(window.Android&&window.Android.setAppTheme)window.Android.setAppTheme(theme);}catch(e){}
+}
+function toggleTheme(){prefs.theme=prefs.theme==='dark'?'light':'dark';savePrefs();applyTheme();}
+applyTheme();
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function norm(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()}
@@ -641,7 +658,7 @@ async function downloadVariants(song,quiet){
 /* ================= Minhas músicas ================= */
 let query='';
 function viewLibrary(){
-  app.innerHTML=`<header class="top"><h1>${brand}</h1><button class="ibtn" aria-label="Backup" onclick="go('/backup')">${I.save}</button></header>
+  app.innerHTML=`<header class="top"><h1>${brand}</h1><button id="theme-toggle" class="ibtn theme-toggle" aria-label="${prefs.theme==='dark'?'Ativar tema claro':'Ativar tema escuro'}" aria-pressed="${prefs.theme==='dark'}" onclick="toggleTheme()">${prefs.theme==='dark'?'☀':'☾'}</button><button class="ibtn" aria-label="Backup" onclick="go('/backup')">${I.save}</button></header>
   <main><input class="search" id="q" type="search" placeholder="Buscar nas músicas salvas" value="${esc(query)}">
   <div class="list" id="list"></div></main>
   <button class="fab" aria-label="Colar cifra" onclick="go('/new')">${I.plus}</button>${nav('lib')}`;
@@ -1882,7 +1899,7 @@ function viewBackup(){
      Ficam só neste aparelho, sem o áudio, e não treinam a IA sozinhas.</p>
      ${n?`<button class="btn" style="width:100%" onclick="exportCorr()">Exportar correções</button><button class="btn ghost" style="width:100%;margin-top:8px" onclick="apagarCorr()">Apagar correções</button>`:''}
      ${prefs.consentCorr!=null?`<button class="btn ghost" style="width:100%;margin-top:8px" onclick="prefs.consentCorr=${prefs.consentCorr?'false':'true'};savePrefs();viewBackup()">${prefs.consentCorr?'Parar de guardar':'Voltar a guardar'}</button>`:''}</div>`})()}
-   <p class="hint" style="text-align:center">TeclaCifra 4.8 · feito para tecladistas · sem anúncios<br>Reconhecimento local de acordes e voz. Revise os resultados antes de salvar.</p></main>${nav('backup')}`;
+   <p class="hint" style="text-align:center">TeclaCifra 4.9 · feito para tecladistas · sem anúncios<br>Reconhecimento local de acordes e voz. Revise os resultados antes de salvar.</p></main>${nav('backup')}`;
 }
 function exportCorr(){
   const txt=JSON.stringify({app:'TeclaCifra',tipo:'correcoes',...store.get('tc_correcoes',{v:1,itens:[]})});
@@ -1908,7 +1925,7 @@ function importData(){
       const i=playlists.findIndex(x=>x.id===clean.id); if(i>=0) playlists[i]=clean; else playlists.push(clean); }
     if(d.prefs&&typeof d.prefs==='object'&&!Array.isArray(d.prefs)){prefs=Object.assign({},prefs,d.prefs);savePrefs();}
     if(d.correcoes&&Array.isArray(d.correcoes.itens)){const base=store.get('tc_correcoes',{v:1,itens:[]});const ids=new Set(base.itens.map(x=>x.id));for(const x of d.correcoes.itens)if(x&&x.id&&!ids.has(x.id)){base.itens.push(x);ids.add(x.id);}store.set('tc_correcoes',base);}
-    saveSongs(); savePls(); toast(n+' música(s) restaurada(s)'); viewBackup();
+    saveSongs(); savePls(); applyTheme(); toast(n+' música(s) restaurada(s)'); viewBackup();
   }catch(e){toast('Backup inválido')}
 }
 

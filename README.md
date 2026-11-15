@@ -1,8 +1,17 @@
-# Tecla Cifra 4.8
+# Tecla Cifra 4.9
 
-Projeto de manutenção recuperado do APK TeclaCifra 4.7 fornecido pelo proprietário. A interface e os fluxos de importação estão em `assets/`. A camada Android, os modelos de IA e as bibliotecas nativas são preservados do APK base; este repositório não contém o código-fonte Android original.
+Projeto de manutenção recuperado do APK TeclaCifra 4.7 fornecido pelo proprietário. A interface e os fluxos de importação estão em `assets/`. Os modelos de IA e as bibliotecas nativas vêm do APK base. A versão 4.9 acrescenta classes Java para o fluxo de transcrição e para o tema, e liga essas classes à camada Android recuperada. O repositório não contém todo o código-fonte Android original.
 
-## Correções
+## Novidades da versão 4.9
+
+- Botão claro/escuro na tela inicial, com preferência persistente e atualização das barras do sistema.
+- Modo de transcrição por regiões de voz, mantendo os tempos da música original.
+- Detecção de voz contínua, margem de contexto, ganho limitado em trechos baixos e segunda tentativa em finais não transcritos.
+- Filtragem de marcadores não falados como BLANKAUDIO.
+- Revisão de palavras antes de montar a cifra, preservando os tempos registrados.
+- Modo equilibrado conserva o processamento anterior como alternativa.
+
+## Correções anteriores
 
 - Preserva as colunas da cifra original, com rolagem horizontal quando necessário.
 - Lê quebras de linha e acordes marcados com `data-chord`, além de blocos PRE divididos.
@@ -16,13 +25,13 @@ Projeto de manutenção recuperado do APK TeclaCifra 4.7 fornecido pelo propriet
 
 ## Gerar APK
 
-Requer Java, Python 3, Apktool 2.12.1 e uber-apk-signer 1.3.0. Obtenha as ferramentas dos projetos oficiais. Os modelos e a camada Android continuam vindo do APK original.
+Requer Java com o módulo jdk.compiler, Python 3, Apktool 2.12.1 e uber-apk-signer 1.3.0. Para compilar as novas classes, coloque `android.jar` (com.google.android:android:4.1.1.4), `json.jar` (org.json:json:20240303), `r8.jar` (com.android.tools:r8:8.3.37) e `apktool.jar` na pasta `../tools/`. Os stubs usados na compilação são verificados contra as assinaturas reais do APK e não são incluídos no aplicativo. Obtenha as ferramentas dos projetos oficiais. Os modelos e a camada Android continuam vindo do APK original.
 
 ```sh
 python3 build.py --base /caminho/TeclaCifra-4.7.apk --apktool /caminho/apktool.jar --signer /caminho/uber-apk-signer.jar
 ```
 
-A saída usa `com.teclacifra.fix`, versão 4.8/código 12, e instala separadamente de `com.teclacifra.app`. Os nomes completos da atividade e do serviço originais são preservados. Sem a chave original não é possível produzir uma atualização assinada compatível com a instalação 4.7. Para migrar músicas, exporte o backup na versão antiga e restaure na nova.
+A saída usa `com.teclacifra.fix`, versão 4.9/código 14, e instala separadamente de `com.teclacifra.app`. Os nomes completos da atividade e do serviço originais são preservados. Sem a chave original não é possível produzir uma atualização assinada compatível com a instalação 4.7. Para migrar músicas, exporte o backup na versão antiga e restaure na nova.
 
 O assinador usa uma chave de desenvolvimento se nenhuma chave for configurada. Para distribuição definitiva, estabeleça uma chave de assinatura própria e estável.
 
@@ -34,4 +43,6 @@ python3 tests/fetch_fixtures.py
 node tests/regression.cjs
 ```
 
-São 15 verificações de importação, alinhamento, fila, timeout, navegação, backup e eventos atrasados. Os testes de sites usam amostras baixadas durante a execução e não publicam letras no repositório. A validação do APK inclui assinatura, integridade do ZIP e comparação da camada nativa/modelos com o original. Ainda é necessário validar no aparelho Android o microfone, a memória, as redes reais e a precisão musical dos modelos. Sites podem exigir verificação ou alterar sua estrutura; o aplicativo informa falha e oferece abrir a página original nesses casos.
+São 19 verificações de importação, alinhamento, fila, timeout, navegação, backup e eventos atrasados. Os testes de sites usam amostras baixadas durante a execução e não publicam letras no repositório. A validação do APK inclui assinatura, integridade do ZIP e comparação da camada nativa/modelos com o original. Ainda é necessário validar no aparelho Android o microfone, a memória, as redes reais e a precisão musical dos modelos. Sites podem exigir verificação ou alterar sua estrutura; o aplicativo informa falha e oferece abrir a página original nesses casos.
+
+A inspiração técnica no Vibe e as limitações de validação estão descritas em [docs/vibe-analysis.md](docs/vibe-analysis.md).
